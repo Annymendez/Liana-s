@@ -1,18 +1,18 @@
-<%-- 
+<%--
     Document   : carrito
-    Created on : 27/04/2026, 1:39:15 p. m.
-    Author     : annym
---%>
+    Paso 1 de la compra: carrito (RF011 / CA024-CA026)
 
-<%--  Modulo 4 - Paso 1: Carrito (RF011 / CA024-CA026) --%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="java.util.List, model.CarritoItem, model.Persona" %>
+    Datos que recibe: la lista "carrito" (List<CarritoItem>) que guarda CarritoServlet en la sesión.
+    Formularios y enlaces que usa el servlet (no cambiar estos nombres):
+      POST /carrito  accion=actualizar, idProducto, cantidad
+      GET  /carrito?accion=eliminar&id=...   |  ?accion=vaciar  |  ?accion=checkout
+--%>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
+<%@ page import="java.util.List, model.CarritoItem, model.Persona, util.Html" %>
 <%
     List<CarritoItem> carrito = (List<CarritoItem>) session.getAttribute("carrito");
     if (carrito == null) carrito = new java.util.ArrayList<>();
     Persona usuario = (Persona) session.getAttribute("usuario");
-    String  nombre  = usuario != null ? usuario.getNombre() : "";
-    String  rol     = usuario != null ? usuario.getTipo()   : "";
     String  ctx     = request.getContextPath();
     String  msg     = request.getParameter("msg");
     String  err     = request.getParameter("error");
@@ -25,95 +25,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MercadoRed — Carrito</title>
+  <title>Liana's — Carrito</title>
   <link rel="stylesheet" href="<%= ctx %>/estilo.css">
-  <style>
-    .user-info { display:flex; align-items:center; gap:14px; font-size:.82rem; }
-    .rol-badge  { padding:3px 10px; border-radius:20px; font-size:.68rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
-    .rol-comprador { background:#c8a882; color:#2c2217; }
-
-    /* Wizard */
-    .wizard { display:flex; align-items:center; margin:40px 0 48px; }
-    .wizard-step { display:flex; align-items:center; gap:12px; flex:1; position:relative; }
-    .wizard-step:not(:last-child)::after {
-      content:''; position:absolute; left:52px; top:20px;
-      width:calc(100% - 52px); height:2px; background:var(--sand); z-index:0;
-    }
-    .step-circle {
-      width:40px; height:40px; border-radius:50%; display:flex; align-items:center;
-      justify-content:center; font-weight:700; font-size:.85rem; flex-shrink:0;
-      position:relative; z-index:1; border:2px solid var(--sand);
-      background:var(--white); color:var(--muted); transition:all .3s;
-    }
-    .step-circle.activo { background:var(--dark); color:var(--cream); border-color:var(--dark); }
-    .step-circle.listo  { background:var(--green); color:#fff; border-color:var(--green); }
-    .step-info { display:flex; flex-direction:column; }
-    .step-num  { font-size:.6rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
-    .step-name { font-size:.84rem; font-weight:600; color:var(--dark); }
-    .step-name.inactivo { color:var(--muted); font-weight:400; }
-
-    /* Layout */
-    .carrito-layout { display:grid; grid-template-columns:1fr 320px; gap:36px; align-items:start; padding-bottom:80px; }
-
-    /* Tabla items */
-    .carrito-card { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow-sm); overflow:hidden; }
-    .carrito-head {
-      background:var(--dark); color:var(--cream); padding:16px 24px;
-      display:flex; align-items:center; justify-content:space-between;
-    }
-    .carrito-head h3 { font-family:var(--font-body); font-size:.7rem; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; margin:0; }
-    .carrito-head a  { font-size:.7rem; color:var(--warm); text-decoration:none; letter-spacing:1px; transition:color .2s; }
-    .carrito-head a:hover { color:var(--cream); }
-
-    .carrito-item {
-      display:grid; grid-template-columns:48px 1fr auto auto;
-      gap:16px; align-items:center; padding:18px 24px;
-      border-bottom:1px solid var(--sand);
-    }
-    .carrito-item:last-child { border-bottom:none; }
-
-    .item-inicial {
-      width:40px; height:40px; border-radius:50%;
-      background:var(--sand); color:var(--terra);
-      display:flex; align-items:center; justify-content:center;
-      font-family:var(--font-display); font-size:1.1rem; font-weight:600;
-    }
-    .item-cat   { font-size:.62rem; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); font-weight:600; margin-bottom:2px; }
-    .item-name  { font-family:var(--font-display); font-size:.95rem; color:var(--dark); margin-bottom:2px; }
-    .item-price { font-size:.8rem; color:var(--muted); }
-
-    /* Control de cantidad */
-    .qty-control { display:flex; align-items:center; border:1.5px solid var(--sand); border-radius:var(--radius-sm); overflow:hidden; }
-    .qty-btn {
-      width:30px; height:30px; background:var(--cream); border:none;
-      cursor:pointer; font-size:1rem; color:var(--terra);
-      display:flex; align-items:center; justify-content:center;
-      transition:background .15s;
-    }
-    .qty-btn:hover { background:var(--sand); }
-    .qty-input {
-      width:40px; height:30px; text-align:center; border:none;
-      font-family:var(--font-body); font-size:.88rem; font-weight:600;
-      color:var(--dark); background:var(--white); outline:none;
-    }
-
-    .item-acciones { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
-    .item-subtotal { font-weight:700; color:var(--terra); font-size:.95rem; }
-    .item-del { color:var(--muted); text-decoration:none; font-size:.72rem; letter-spacing:.5px; transition:color .2s; }
-    .item-del:hover { color:var(--red); }
-
-    /* Resumen */
-    .resumen-card { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow-sm); overflow:hidden; position:sticky; top:88px; }
-    .resumen-head { background:var(--terra); color:var(--cream); padding:16px 22px; font-family:var(--font-body); font-size:.7rem; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; }
-    .resumen-body { padding:22px; }
-    .resumen-row  { display:flex; justify-content:space-between; margin-bottom:10px; font-size:.86rem; color:var(--muted); }
-    .resumen-row strong { color:var(--dark); }
-    .resumen-div  { height:1px; background:var(--sand); margin:14px 0; }
-    .resumen-total { display:flex; justify-content:space-between; align-items:baseline; }
-    .resumen-total .lbl { font-size:.7rem; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; }
-    .resumen-total .amt { font-family:var(--font-display); font-size:1.5rem; color:var(--terra); font-weight:600; }
-    .resumen-notas { font-size:.7rem; color:var(--muted); line-height:1.9; margin-top:16px; text-align:center; }
-  </style>
+  <link rel="stylesheet" href="<%= ctx %>/compra.css">
 </head>
 <body>
 
@@ -121,7 +35,7 @@
 
 <div class="container">
 
-  <!-- Wizard de pasos -->
+  <!-- Pasos de la compra -->
   <div class="wizard">
     <div class="wizard-step">
       <div class="step-circle activo">1</div>
@@ -129,7 +43,7 @@
     </div>
     <div class="wizard-step">
       <div class="step-circle">2</div>
-      <div class="step-info"><span class="step-num">Paso 2</span><span class="step-name inactivo">Direccion</span></div>
+      <div class="step-info"><span class="step-num">Paso 2</span><span class="step-name inactivo">Dirección</span></div>
     </div>
     <div class="wizard-step">
       <div class="step-circle">3</div>
@@ -141,73 +55,85 @@
     <div class="alert alert-success" style="margin-bottom:20px;">Producto agregado al carrito.</div>
   <% } %>
   <% if ("vacio".equals(err)) { %>
-    <div class="alert alert-warning" style="margin-bottom:20px;">Tu carrito esta vacio. Agrega productos antes de continuar.</div>
+    <div class="alert alert-warning" style="margin-bottom:20px;">Tu carrito está vacío. Agrega productos antes de continuar.</div>
+  <% } %>
+  <% if ("datos".equals(err)) { %>
+    <div class="alert alert-error" style="margin-bottom:20px;">No pudimos procesar esa acción. Revisa tu carrito e inténtalo de nuevo.</div>
   <% } %>
 
   <% if (carrito.isEmpty()) { %>
     <div class="empty-state">
-      <div class="icon">[ ]</div>
-      <h3>Tu carrito esta vacio</h3>
-      <p>Explora el catalogo y agrega los productos que quieras comprar.</p>
-      <a href="<%= ctx %>/producto?accion=listar" class="btn btn-primary">Ver catalogo</a>
+      <h3>Tu carrito está vacío</h3>
+      <p>Explora el catálogo y agrega las piezas que quieras llevarte.</p>
+      <a href="<%= ctx %>/producto?accion=listar" class="btn btn-primary">Ver catálogo</a>
     </div>
   <% } else { %>
   <div class="carrito-layout">
 
-    <!-- Items del carrito (CA025) -->
+    <!-- Productos del carrito (CA025) -->
     <div class="carrito-card">
       <div class="carrito-head">
-        <h3>Carrito · <%= carrito.size() %> <%= carrito.size()==1?"producto":"productos" %></h3>
+        <h3>Carrito · <%= carrito.size() %> <%= carrito.size() == 1 ? "producto" : "productos" %></h3>
         <a href="<%= ctx %>/carrito?accion=vaciar"
-           onclick="return confirm('Vaciar el carrito?')">Vaciar carrito</a>
+           onclick="return confirm('¿Vaciar el carrito?')">Vaciar carrito</a>
       </div>
 
-      <% for (CarritoItem item : carrito) { %>
+      <% for (CarritoItem item : carrito) {
+           String titulo  = item.getTitulo() != null ? item.getTitulo() : "";
+           String inicial = titulo.isEmpty() ? "L" : titulo.substring(0, 1).toUpperCase();
+           boolean unica  = item.getStockDisponible() <= 1;
+      %>
       <div class="carrito-item">
-        <div class="item-inicial">
-          <%= item.getTitulo() != null && !item.getTitulo().isEmpty()
-              ? String.valueOf(item.getTitulo().charAt(0)).toUpperCase() : "P" %>
-        </div>
+        <div class="item-inicial"><%= Html.esc(inicial) %></div>
+
         <div>
-          <p class="item-cat"><%= item.getCategoria() %></p>
-          <p class="item-name"><%= item.getTitulo() %></p>
-          <p class="item-price">$ <%= String.format("%,.0f", item.getPrecioUnitario()) %> COP / unidad &nbsp;·&nbsp; Stock: <%= item.getStockDisponible() %></p>
+          <p class="item-cat"><%= Html.esc(item.getCategoria()) %></p>
+          <p class="item-name">
+            <a href="<%= ctx %>/producto?accion=detalle&id=<%= item.getIdProducto() %>"><%= Html.esc(titulo) %></a>
+          </p>
+          <p class="item-price">$ <%= String.format("%,.0f", item.getPrecioUnitario()) %> COP</p>
         </div>
 
-        <!-- Cantidad con auto-submit -->
-        <form method="post" action="<%= ctx %>/carrito" id="form-<%= item.getIdProducto() %>">
-          <input type="hidden" name="accion"     value="actualizar">
-          <input type="hidden" name="idProducto" value="<%= item.getIdProducto() %>">
-          <div class="qty-control">
-            <button type="button" class="qty-btn"
-                    onclick="cambiarCant(<%= item.getIdProducto() %>, -1, <%= item.getStockDisponible() %>)">-</button>
-            <input type="number" name="cantidad" class="qty-input"
-                   id="qty-<%= item.getIdProducto() %>"
-                   value="<%= item.getCantidad() %>"
-                   min="1" max="<%= item.getStockDisponible() %>"
-                   onchange="this.form.submit()">
-            <button type="button" class="qty-btn"
-                    onclick="cambiarCant(<%= item.getIdProducto() %>, +1, <%= item.getStockDisponible() %>)">+</button>
-          </div>
-        </form>
+        <div class="item-cantidad">
+        <% if (unica) { %>
+          <!-- Pieza única: solo hay una unidad, no tiene sentido cambiar la cantidad -->
+          <span class="item-unica">Pieza única</span>
+        <% } else { %>
+          <form method="post" action="<%= ctx %>/carrito" id="form-<%= item.getIdProducto() %>">
+            <input type="hidden" name="accion"     value="actualizar">
+            <input type="hidden" name="idProducto" value="<%= item.getIdProducto() %>">
+            <div class="qty-control">
+              <button type="button" class="qty-btn" aria-label="Quitar una unidad"
+                      onclick="cambiarCant(<%= item.getIdProducto() %>, -1, <%= item.getStockDisponible() %>)">-</button>
+              <input type="number" name="cantidad" class="qty-input"
+                     id="qty-<%= item.getIdProducto() %>"
+                     value="<%= item.getCantidad() %>"
+                     min="1" max="<%= item.getStockDisponible() %>"
+                     onchange="this.form.submit()">
+              <button type="button" class="qty-btn" aria-label="Agregar una unidad"
+                      onclick="cambiarCant(<%= item.getIdProducto() %>, +1, <%= item.getStockDisponible() %>)">+</button>
+            </div>
+          </form>
+        <% } %>
+        </div>
 
         <div class="item-acciones">
           <span class="item-subtotal">$ <%= String.format("%,.0f", item.getSubtotal()) %></span>
           <a href="<%= ctx %>/carrito?accion=eliminar&id=<%= item.getIdProducto() %>"
              class="item-del"
-             onclick="return confirm('Quitar este producto del carrito?')">Quitar</a>
+             onclick="return confirm('¿Quitar este producto del carrito?')">Quitar</a>
         </div>
       </div>
       <% } %>
     </div>
 
-    <!-- Resumen lateral (CA026) -->
+    <!-- Resumen (CA026) -->
     <aside class="resumen-card">
       <div class="resumen-head">Resumen de compra</div>
       <div class="resumen-body">
         <% for (CarritoItem item : carrito) { %>
         <div class="resumen-row">
-          <span><%= item.getTitulo() %> x<%= item.getCantidad() %></span>
+          <span><%= Html.esc(item.getTitulo()) %><% if (item.getCantidad() > 1) { %> × <%= item.getCantidad() %><% } %></span>
           <strong>$ <%= String.format("%,.0f", item.getSubtotal()) %></strong>
         </div>
         <% } %>
@@ -216,21 +142,16 @@
           <span class="lbl">Total</span>
           <span class="amt">$ <%= String.format("%,.0f", total) %></span>
         </div>
-        <p style="font-size:.68rem;color:var(--muted);text-align:right;margin-top:4px;">COP · IVA incluido</p>
+        <p class="resumen-moneda">Valores en pesos colombianos (COP)</p>
 
-        <div style="margin-top:22px; display:flex; flex-direction:column; gap:9px;">
-          <a href="<%= ctx %>/carrito?accion=checkout" class="btn btn-primary" style="justify-content:center;">
-            Continuar — Direccion de envio
-          </a>
-          <a href="<%= ctx %>/producto?accion=listar" class="btn btn-secondary" style="justify-content:center;">
-            Seguir comprando
-          </a>
+        <div class="resumen-botones">
+          <a href="<%= ctx %>/carrito?accion=checkout" class="btn btn-primary">Continuar: dirección de envío</a>
+          <a href="<%= ctx %>/producto?accion=listar" class="btn btn-secondary">Seguir comprando</a>
         </div>
 
         <div class="resumen-notas">
-          Pago 100% seguro<br>
-          Envio a todo Colombia<br>
-          Fondos protegidos hasta recibir
+          Envío a todo Colombia<br>
+          Confirmas la recepción desde tus pedidos
         </div>
       </div>
     </aside>
@@ -239,16 +160,17 @@
 </div>
 
 <footer class="footer">
-  <div class="footer-brand">MercadoRed</div>
-  <p>© 2026 MercadoRed S.A.S. · Bogota, Colombia</p>
+  <div class="footer-brand">Liana's</div>
+  <p>© 2026 Liana's · Bogotá, Colombia</p>
 </footer>
 
 <script>
+// Sube o baja la cantidad de un producto y envía el formulario.
 function cambiarCant(id, delta, maxStock) {
   var input = document.getElementById('qty-' + id);
-  var val = parseInt(input.value) + delta;
-  if (val < 1)        val = 1;
-  if (val > maxStock) val = maxStock;
+  var val = parseInt(input.value, 10) + delta;
+  if (isNaN(val) || val < 1) val = 1;
+  if (val > maxStock)        val = maxStock;
   input.value = val;
   document.getElementById('form-' + id).submit();
 }

@@ -1,11 +1,35 @@
-<%-- 
+<%--
     Document   : lista
-    Created on : 4/04/2026, 11:26:57 p. m.
-    Author     : annym
---%>
+    Catálogo de productos (comprador) / inventario (vendedor y admin).
 
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="java.util.List, model.Producto, model.Persona" %>
+    Filtros nuevos (marca, talla, color): aparecen solos cuando el ProductoServlet
+    envía estas listas como atributos de la petición. Mientras no existan, no se
+    muestran, así la página sigue funcionando con el backend actual.
+        request.setAttribute("marcas",  List<String>)   opciones del filtro Marca
+        request.setAttribute("tallas",  List<String>)   opciones del filtro Talla
+        request.setAttribute("colores", List<String>)   opciones del filtro Color
+        request.setAttribute("marca" / "talla" / "color", String)  valor elegido
+--%>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
+<%@ page import="java.util.List, java.util.LinkedHashMap, java.util.Map, model.Producto, model.Persona, util.Html" %>
+<%!
+    /** Arma la URL del catálogo con los filtros activos, sin los que se quieren quitar. */
+    private static String urlSin(String ctx, Map<String, String> filtros, String... quitar) {
+        java.util.Set<String> omitir = new java.util.HashSet<>(java.util.Arrays.asList(quitar));
+        StringBuilder sb = new StringBuilder(ctx).append("/producto?accion=listar");
+        for (Map.Entry<String, String> e : filtros.entrySet()) {
+            if (omitir.contains(e.getKey()) || e.getValue().isEmpty()) continue;
+            sb.append('&').append(e.getKey()).append('=').append(Html.url(e.getValue()));
+        }
+        return sb.toString();
+    }
+
+    /** Lee un atributo de la petición como texto ("" si no existe). */
+    private static String attr(jakarta.servlet.ServletRequest req, String nombre) {
+        Object v = req.getAttribute(nombre);
+        return v == null ? "" : v.toString();
+    }
+%>
 <%
     List<Producto> productos = (List<Producto>) request.getAttribute("productos");
     String msg   = request.getParameter("msg");
@@ -13,29 +37,40 @@
     String ctx   = request.getContextPath();
 
     Persona usuario = (Persona) session.getAttribute("usuario");
-    String  rol     = usuario != null ? usuario.getTipo()   : "";
-    String  nombre  = usuario != null ? usuario.getNombre() : "";
+    String  rol     = usuario != null ? usuario.getTipo() : "";
 
     if (error == null) error = request.getParameter("error");
 
-    boolean hayFiltro    = Boolean.TRUE.equals(request.getAttribute("hayFiltro"));
-    String  filtroBuscar = (String) request.getAttribute("buscar");
-    String  filtroCat    = (String) request.getAttribute("categoria");
-    String  filtroMin    = (String) request.getAttribute("min");
-    String  filtroMax    = (String) request.getAttribute("max");
-    String  filtroEstado = (String) request.getAttribute("estado");
-    String  filtroOrden  = (String) request.getAttribute("orden");
-    if (filtroBuscar == null) filtroBuscar = "";
-    if (filtroCat    == null) filtroCat    = "";
-    if (filtroMin    == null) filtroMin    = "";
-    if (filtroMax    == null) filtroMax    = "";
-    if (filtroEstado == null) filtroEstado = "";
-    if (filtroOrden  == null) filtroOrden  = "";
+    boolean hayFiltro = Boolean.TRUE.equals(request.getAttribute("hayFiltro"));
+
+    // Filtros activos (en este orden). Los vacíos no cuentan ni se muestran.
+    Map<String, String> filtros = new LinkedHashMap<>();
+    filtros.put("buscar",    attr(request, "buscar"));
+    filtros.put("categoria", attr(request, "categoria"));
+    filtros.put("marca",     attr(request, "marca"));
+    filtros.put("talla",     attr(request, "talla"));
+    filtros.put("color",     attr(request, "color"));
+    filtros.put("min",       attr(request, "min"));
+    filtros.put("max",       attr(request, "max"));
+    filtros.put("estado",    attr(request, "estado"));
+    String filtroOrden = attr(request, "orden");
+
+    String fBuscar = filtros.get("buscar"), fCat    = filtros.get("categoria"),
+           fMarca  = filtros.get("marca"),  fTalla  = filtros.get("talla"),
+           fColor  = filtros.get("color"),  fMin    = filtros.get("min"),
+           fMax    = filtros.get("max"),    fEstado = filtros.get("estado");
+
+    // Opciones de los filtros nuevos (las envía el servlet; si no, no se dibujan)
+    List<String> marcas  = (List<String>) request.getAttribute("marcas");
+    List<String> tallas  = (List<String>) request.getAttribute("tallas");
+    List<String> colores = (List<String>) request.getAttribute("colores");
+
+    int nFiltros = 0;
+    for (String v : filtros.values()) if (!v.isEmpty()) nFiltros++;
 
     int totalProductos = (productos != null) ? productos.size() : 0;
 
-    java.util.List<model.CarritoItem> carrito =
-        (java.util.List<model.CarritoItem>) session.getAttribute("carrito");
+    List<model.CarritoItem> carrito = (List<model.CarritoItem>) session.getAttribute("carrito");
     int carritoSize = (carrito != null) ? carrito.size() : 0;
 
     // CA016: id_vendedor del usuario actual para mostrar botones solo al propietario
@@ -48,253 +83,27 @@
         } catch (Exception ignored) {}
     }
 
-    String[][] categorias = {
-        {"Tecnologia"}, {"Ropa"}, {"Muebles"},
-        {"Hogar"}, {"Deportes"}, {"Libros"}, {"Juguetes"}, {"Otro"}
-    };
+    String[] categorias = { "Tecnologia", "Ropa", "Muebles", "Hogar", "Deportes", "Libros", "Juguetes", "Otro" };
+    String[] etiquetasTexto = { "buscar", "categoria", "marca", "talla", "color", "estado" };
 %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MercadoRed — Catalogo</title>
+  <title>Liana's — Catálogo</title>
   <link rel="stylesheet" href="<%= ctx %>/estilo.css">
-  <style>
-    /* ── BADGES ROL ── */
-    .user-info { display:flex; align-items:center; gap:14px; font-size:.82rem; }
-    .rol-badge  { padding:3px 10px; border-radius:20px; font-size:.68rem; font-weight:700;
-                  letter-spacing:1px; text-transform:uppercase; }
-    .rol-admin     { background:#2c2217; color:#f5f0e8; }
-    .rol-vendedor  { background:#8b6247; color:#fff; }
-    .rol-comprador { background:#c8a882; color:#2c2217; }
-    .carrito-badge {
-      background:var(--red); color:#fff; font-size:.6rem; font-weight:700;
-      padding:1px 6px; border-radius:20px; margin-left:2px; vertical-align:middle;
-    }
-    .nav-active { color:var(--dark) !important; font-weight:600; }
-
-    /* ── SUBHEADER DEL CATALOGO ── */
-    .catalogo-subheader {
-      background: var(--white);
-      border-bottom: 1px solid var(--sand);
-      padding: 20px 0;
-    }
-    .catalogo-subheader-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 40px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-    .catalogo-subheader h1 {
-      font-family: var(--font-display);
-      font-size: 1.6rem;
-      font-weight: 400;
-      color: var(--dark);
-    }
-    .catalogo-subheader .sub {
-      font-size: .68rem;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-    .resultado-info { display: flex; align-items: center; gap: 12px; }
-    .resultado-count { font-size: .82rem; color: var(--muted); }
-    .resultado-count strong { color: var(--terra); font-weight: 600; }
-
-    /* ── LAYOUT: 2 columnas independientes bajo el subheader ── */
-    /*
-     * FIX de scroll: el wrapper ocupa el espacio restante de la ventana
-     * (100vh menos navbar 72px menos subheader ~85px).
-     * Cada columna tiene su propio overflow-y:auto, por lo que
-     * filtros y productos se desplazan de forma independiente.
-     * El hero y el ticker viven en index.jsp (pagina Inicio),
-     * no en esta vista de catalogo.
-     */
-    .catalogo-wrapper {
-      display: grid;
-      grid-template-columns: 268px 1fr;
-      height: calc(100vh - 157px);   /* 72px navbar + 85px subheader */
-      overflow: hidden;
-    }
-    .catalogo-wrapper.sin-filtros {
-      grid-template-columns: 1fr;
-    }
-    .catalogo-wrapper.sin-filtros .filtros-col {
-      display: none;
-    }
-
-    /* Columna izquierda — filtros */
-    .filtros-col {
-      height: 100%;
-      overflow-y: auto;
-      background: var(--white);
-      border-right: 1px solid var(--sand);
-      scrollbar-width: thin;
-      scrollbar-color: var(--sand) transparent;
-    }
-    .filtros-col::-webkit-scrollbar { width: 4px; }
-    .filtros-col::-webkit-scrollbar-thumb { background: var(--sand); border-radius: 4px; }
-
-    /* Columna derecha — productos */
-    .productos-col {
-      height: 100%;
-      overflow-y: auto;
-      background: var(--cream);
-      scrollbar-width: thin;
-      scrollbar-color: var(--sand) transparent;
-    }
-    .productos-col::-webkit-scrollbar { width: 4px; }
-    .productos-col::-webkit-scrollbar-thumb { background: var(--sand); border-radius: 4px; }
-
-    .productos-inner { padding: 32px 36px 80px; }
-
-    /* ── PANEL FILTROS ── */
-    .filtros-header {
-      background: var(--dark);
-      color: var(--cream);
-      padding: 18px 22px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 5;
-    }
-    .filtros-header h3 {
-      font-family: var(--font-body);
-      font-size: .68rem;
-      font-weight: 600;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      margin: 0;
-    }
-    .filtros-count {
-      background: var(--accent); color: var(--white);
-      font-size: .62rem; font-weight: 700;
-      padding: 2px 8px; border-radius: 20px; display: none;
-    }
-    .filtros-count.visible { display: inline-block; }
-
-    .filtro-grupo { padding: 16px 20px; border-bottom: 1px solid var(--sand); }
-    .filtro-grupo:last-child { border-bottom: none; }
-
-    .filtro-label {
-      font-size: .6rem; font-weight: 700; letter-spacing: 2px;
-      text-transform: uppercase; color: var(--muted);
-      margin-bottom: 11px; display: block;
-    }
-
-    .filtro-search-wrap { position: relative; }
-    .filtro-search-wrap svg {
-      position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
-      color: var(--warm); width: 13px; height: 13px; pointer-events: none;
-    }
-    .filtro-search-wrap input {
-      width: 100%; padding: 8px 10px 8px 30px;
-      border: 1.5px solid var(--sand); border-radius: var(--radius-sm);
-      font-family: var(--font-body); font-size: .86rem; color: var(--dark);
-      background: var(--cream); outline: none;
-      transition: border-color .2s; box-sizing: border-box;
-    }
-    .filtro-search-wrap input:focus { border-color: var(--terra); background: var(--white); }
-    .filtro-search-wrap input::placeholder { color: var(--warm); }
-
-    .cat-chips { display: flex; flex-direction: column; gap: 2px; }
-    .cat-chip {
-      display: flex; align-items: center; gap: 8px;
-      padding: 7px 9px; border-radius: var(--radius-sm);
-      cursor: pointer; transition: background .15s;
-      font-size: .82rem; color: var(--dark); user-select: none;
-    }
-    .cat-chip:hover { background: var(--cream); }
-    .cat-chip.activo { background: var(--sand); color: var(--terra); font-weight: 600; }
-    .cat-chip input[type="radio"] { display: none; }
-    .cat-chip-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--sand); border: 1.5px solid var(--warm); flex-shrink: 0;
-    }
-    .cat-chip.activo .cat-chip-dot { background: var(--terra); border-color: var(--terra); }
-
-    .precio-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-    .precio-field  { display: flex; flex-direction: column; gap: 4px; }
-    .precio-field span {
-      font-size: .58rem; letter-spacing: 1px; text-transform: uppercase;
-      color: var(--muted); font-weight: 600;
-    }
-    .precio-field input {
-      width: 100%; padding: 7px 9px;
-      border: 1.5px solid var(--sand); border-radius: var(--radius-sm);
-      font-family: var(--font-body); font-size: .82rem; color: var(--dark);
-      background: var(--cream); outline: none; box-sizing: border-box;
-      transition: border-color .2s;
-    }
-    .precio-field input:focus { border-color: var(--terra); }
-
-    .filtro-select {
-      width: 100%; padding: 8px 28px 8px 10px;
-      border: 1.5px solid var(--sand); border-radius: var(--radius-sm);
-      font-family: var(--font-body); font-size: .84rem; color: var(--dark);
-      background: var(--cream); outline: none; cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b6247' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 10px center;
-      transition: border-color .2s; box-sizing: border-box;
-    }
-    .filtro-select:focus { border-color: var(--terra); }
-
-    .filtros-actions { padding: 14px 20px 22px; display: flex; flex-direction: column; gap: 7px; }
-    .filtros-actions .btn { justify-content: center; width: 100%; font-size: .7rem; }
-
-    /* ── CONTENIDO PRODUCTOS ── */
-    .filtro-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
-    .filtro-tag {
-      display: inline-flex; align-items: center; gap: 5px;
-      background: var(--sand); color: var(--terra);
-      border: 1.5px solid var(--warm);
-      padding: 3px 11px; border-radius: 20px;
-      font-size: .7rem; font-weight: 600;
-    }
-    .filtro-tag a { color: var(--muted); text-decoration: none; font-size: .82rem; transition: color .15s; }
-    .filtro-tag a:hover { color: var(--red); }
-
-    .catalogo-divider { height: 1px; background: var(--sand); margin-bottom: 24px; }
-
-    /* Boton agregar al carrito */
-    .btn-carrito {
-      flex: 1; justify-content: center;
-      background: var(--terra); color: var(--white);
-      border: none; padding: 8px 12px;
-      border-radius: var(--radius-sm);
-      font-family: var(--font-body); font-size: .7rem;
-      font-weight: 600; letter-spacing: .5px;
-      cursor: pointer; transition: background .2s;
-      text-decoration: none; display: inline-flex; align-items: center;
-    }
-    .btn-carrito:hover { background: var(--dark); }
-
-    @media (max-width: 900px) {
-      .catalogo-wrapper { grid-template-columns: 1fr; height: auto; overflow: visible; }
-      .filtros-col, .productos-col { height: auto; overflow: visible; }
-      .catalogo-subheader-inner { padding: 0 24px; }
-    }
-  </style>
+  <link rel="stylesheet" href="<%= ctx %>/catalogo.css">
 </head>
 <body>
 
-<!-- NAVBAR -->
 <%@ include file="/navbar.jsp" %>
 
-<!-- SUBHEADER DEL CATALOGO -->
 <div class="catalogo-subheader">
   <div class="catalogo-subheader-inner">
     <div>
       <p class="sub"><% if ("comprador".equals(rol)) { %>Explora y compra<% } else if ("vendedor".equals(rol)) { %>Mis publicaciones<% } else { %>Gestión de inventario<% } %></p>
-      <h1>Catalogo de Productos</h1>
+      <h1>Catálogo</h1>
     </div>
     <div class="resultado-info">
       <span class="resultado-count"><strong><%= totalProductos %></strong> <%= totalProductos == 1 ? "resultado" : "resultados" %></span>
@@ -309,7 +118,6 @@
   </div>
 </div>
 
-<!-- LAYOUT DE DOS COLUMNAS CON SCROLL INDEPENDIENTE -->
 <div class="catalogo-wrapper<% if ("admin".equals(rol)) { %> sin-filtros<% } %>">
 
   <!-- FILTROS -->
@@ -319,14 +127,6 @@
 
       <div class="filtros-header">
         <h3>Filtros</h3>
-        <%
-          int nFiltros = 0;
-          if (!filtroBuscar.isEmpty()) nFiltros++;
-          if (!filtroCat.isEmpty())    nFiltros++;
-          if (!filtroMin.isEmpty())    nFiltros++;
-          if (!filtroMax.isEmpty())    nFiltros++;
-          if (!filtroEstado.isEmpty()) nFiltros++;
-        %>
         <span class="filtros-count <%= nFiltros > 0 ? "visible" : "" %>"><%= nFiltros %></span>
       </div>
 
@@ -336,39 +136,87 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
-          <input type="text" name="buscar" placeholder="Nombre o descripcion..."
-                 value="<%= filtroBuscar %>" oninput="updateCount()">
+          <input type="text" name="buscar" placeholder="Nombre o descripción..."
+                 value="<%= Html.esc(fBuscar) %>">
         </div>
       </div>
 
       <div class="filtro-grupo">
-        <span class="filtro-label">Categoria</span>
+        <span class="filtro-label">Categoría</span>
         <div class="cat-chips">
-          <label class="cat-chip <%= filtroCat.isEmpty() ? "activo" : "" %>">
-            <input type="radio" name="categoria" value=""
-                   <%= filtroCat.isEmpty() ? "checked" : "" %> onchange="this.form.submit()">
+          <label class="cat-chip <%= fCat.isEmpty() ? "activo" : "" %>">
+            <input type="radio" name="categoria" value="" <%= fCat.isEmpty() ? "checked" : "" %>
+                   onchange="this.form.submit()">
             <span class="cat-chip-dot"></span><span>Todas</span>
           </label>
-          <% for (String[] cat : categorias) { boolean sel = cat[0].equals(filtroCat); %>
+          <% for (String cat : categorias) { boolean sel = cat.equals(fCat); %>
           <label class="cat-chip <%= sel ? "activo" : "" %>">
-            <input type="radio" name="categoria" value="<%= cat[0] %>"
-                   <%= sel ? "checked" : "" %> onchange="this.form.submit()">
-            <span class="cat-chip-dot"></span><span><%= cat[0] %></span>
+            <input type="radio" name="categoria" value="<%= Html.esc(cat) %>" <%= sel ? "checked" : "" %>
+                   onchange="this.form.submit()">
+            <span class="cat-chip-dot"></span><span><%= Html.esc(cat) %></span>
           </label>
           <% } %>
         </div>
       </div>
 
+      <% if (marcas != null && !marcas.isEmpty()) { %>
+      <div class="filtro-grupo">
+        <span class="filtro-label">Marca</span>
+        <select name="marca" class="filtro-select" onchange="this.form.submit()">
+          <option value="" <%= fMarca.isEmpty() ? "selected" : "" %>>Todas</option>
+          <% for (String m : marcas) { %>
+            <option value="<%= Html.esc(m) %>" <%= m.equals(fMarca) ? "selected" : "" %>><%= Html.esc(m) %></option>
+          <% } %>
+        </select>
+      </div>
+      <% } %>
+
+      <% if (tallas != null && !tallas.isEmpty()) { %>
+      <div class="filtro-grupo">
+        <span class="filtro-label">Talla</span>
+        <div class="filtro-chips">
+          <label class="filtro-chip <%= fTalla.isEmpty() ? "activo" : "" %>">
+            <input type="radio" name="talla" value="" <%= fTalla.isEmpty() ? "checked" : "" %>
+                   onchange="this.form.submit()">Todas
+          </label>
+          <% for (String t : tallas) { boolean sel = t.equals(fTalla); %>
+          <label class="filtro-chip <%= sel ? "activo" : "" %>">
+            <input type="radio" name="talla" value="<%= Html.esc(t) %>" <%= sel ? "checked" : "" %>
+                   onchange="this.form.submit()"><%= Html.esc(t) %>
+          </label>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (colores != null && !colores.isEmpty()) { %>
+      <div class="filtro-grupo">
+        <span class="filtro-label">Color</span>
+        <div class="filtro-chips">
+          <label class="filtro-chip <%= fColor.isEmpty() ? "activo" : "" %>">
+            <input type="radio" name="color" value="" <%= fColor.isEmpty() ? "checked" : "" %>
+                   onchange="this.form.submit()">Todos
+          </label>
+          <% for (String c : colores) { boolean sel = c.equals(fColor); %>
+          <label class="filtro-chip <%= sel ? "activo" : "" %>">
+            <input type="radio" name="color" value="<%= Html.esc(c) %>" <%= sel ? "checked" : "" %>
+                   onchange="this.form.submit()"><%= Html.esc(c) %>
+          </label>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+
       <div class="filtro-grupo">
         <span class="filtro-label">Precio (COP)</span>
         <div class="precio-inputs">
           <div class="precio-field">
-            <span>Minimo</span>
-            <input type="number" name="min" placeholder="0" value="<%= filtroMin %>" min="0" step="5000">
+            <span>Mínimo</span>
+            <input type="number" name="min" placeholder="0" value="<%= Html.esc(fMin) %>" min="0" step="5000">
           </div>
           <div class="precio-field">
-            <span>Maximo</span>
-            <input type="number" name="max" placeholder="Sin limite" value="<%= filtroMax %>" min="0" step="5000">
+            <span>Máximo</span>
+            <input type="number" name="max" placeholder="Sin límite" value="<%= Html.esc(fMax) %>" min="0" step="5000">
           </div>
         </div>
       </div>
@@ -376,22 +224,22 @@
       <div class="filtro-grupo">
         <span class="filtro-label">Estado</span>
         <select name="estado" class="filtro-select" onchange="this.form.submit()">
-          <option value="" <%= filtroEstado.isEmpty()        ? "selected" : "" %>>Todos</option>
-          <option value="nuevo" <%= "nuevo".equals(filtroEstado) ? "selected" : "" %>>Nuevo</option>
-          <option value="usado" <%= "usado".equals(filtroEstado) ? "selected" : "" %>>Usado</option>
+          <option value=""      <%= fEstado.isEmpty()           ? "selected" : "" %>>Todos</option>
+          <option value="nuevo" <%= "nuevo".equals(fEstado) ? "selected" : "" %>>Nuevo</option>
+          <option value="usado" <%= "usado".equals(fEstado) ? "selected" : "" %>>Usado</option>
         </select>
       </div>
 
       <div class="filtro-grupo">
         <span class="filtro-label">Ordenar por</span>
         <select name="orden" class="filtro-select" onchange="this.form.submit()">
-          <option value=""            <%= filtroOrden.isEmpty()              ? "selected" : "" %>>Relevancia</option>
-          <option value="precio_asc"  <%= "precio_asc" .equals(filtroOrden) ? "selected" : "" %>>Menor precio</option>
+          <option value=""            <%= filtroOrden.isEmpty()                ? "selected" : "" %>>Relevancia</option>
+          <option value="precio_asc"  <%= "precio_asc".equals(filtroOrden)  ? "selected" : "" %>>Menor precio</option>
           <option value="precio_desc" <%= "precio_desc".equals(filtroOrden) ? "selected" : "" %>>Mayor precio</option>
-          <option value="nombre_asc"  <%= "nombre_asc" .equals(filtroOrden) ? "selected" : "" %>>Nombre A-Z</option>
+          <option value="nombre_asc"  <%= "nombre_asc".equals(filtroOrden)  ? "selected" : "" %>>Nombre A-Z</option>
           <option value="nombre_desc" <%= "nombre_desc".equals(filtroOrden) ? "selected" : "" %>>Nombre Z-A</option>
-          <option value="stock_desc"  <%= "stock_desc" .equals(filtroOrden) ? "selected" : "" %>>Mayor stock</option>
-          <option value="reciente"    <%= "reciente"   .equals(filtroOrden) ? "selected" : "" %>>Mas recientes</option>
+          <option value="stock_desc"  <%= "stock_desc".equals(filtroOrden)  ? "selected" : "" %>>Mayor stock</option>
+          <option value="reciente"    <%= "reciente".equals(filtroOrden)    ? "selected" : "" %>>Más recientes</option>
         </select>
       </div>
 
@@ -408,44 +256,37 @@
   <section class="productos-col">
     <div class="productos-inner">
 
-      <!-- Alerts -->
       <% if ("creado".equals(msg)) { %>
-        <div class="alert alert-success" style="margin-bottom:18px;">Producto publicado exitosamente.</div>
+        <div class="alert alert-success">Producto publicado exitosamente.</div>
       <% } else if ("actualizado".equals(msg)) { %>
-        <div class="alert alert-success" style="margin-bottom:18px;">Producto actualizado correctamente.</div>
+        <div class="alert alert-success">Producto actualizado correctamente.</div>
       <% } else if ("eliminado".equals(msg)) { %>
-        <div class="alert alert-warning" style="margin-bottom:18px;">Producto eliminado del catalogo.</div>
+        <div class="alert alert-warning">Producto eliminado del catálogo.</div>
       <% } else if ("agregado".equals(msg)) { %>
-        <div class="alert alert-success" style="margin-bottom:18px;">Producto agregado al carrito.</div>
+        <div class="alert alert-success">Producto agregado al carrito.</div>
       <% } %>
       <% if (error != null && !error.isEmpty()) { %>
-        <div class="alert alert-error" style="margin-bottom:18px;">No tienes permiso para esa accion.</div>
+        <div class="alert alert-error">No tienes permiso para esa acción.</div>
       <% } %>
 
-      <!-- Tags de filtros activos (CA023) -->
-      <% if (hayFiltro) { %>
+      <!-- Etiquetas de filtros activos (CA023): cada una se quita con su "x" -->
+      <% if (nFiltros > 0) { %>
         <div class="filtro-tags">
-          <% if (!filtroBuscar.isEmpty()) { %>
-            <span class="filtro-tag">"<%= filtroBuscar %>"
-              <a href="<%= ctx %>/producto?accion=listar&categoria=<%= filtroCat %>&min=<%= filtroMin %>&max=<%= filtroMax %>&estado=<%= filtroEstado %>&orden=<%= filtroOrden %>">x</a>
+          <% for (String k : etiquetasTexto) {
+               String v = filtros.get(k);
+               if (v.isEmpty()) continue;
+               String texto = k.equals("buscar") ? "\"" + v + "\"" : v;
+          %>
+            <span class="filtro-tag"><%= Html.esc(texto) %>
+              <a href="<%= Html.esc(urlSin(ctx, filtros, k)) %>" title="Quitar filtro">x</a>
             </span>
           <% } %>
-          <% if (!filtroCat.isEmpty()) { %>
-            <span class="filtro-tag"><%= filtroCat %>
-              <a href="<%= ctx %>/producto?accion=listar&buscar=<%= filtroBuscar %>&min=<%= filtroMin %>&max=<%= filtroMax %>&estado=<%= filtroEstado %>&orden=<%= filtroOrden %>">x</a>
-            </span>
-          <% } %>
-          <% if (!filtroMin.isEmpty() || !filtroMax.isEmpty()) { %>
-            <span class="filtro-tag">
-              <% if (!filtroMin.isEmpty() && !filtroMax.isEmpty()) { %>$<%= filtroMin %> - $<%= filtroMax %>
-              <% } else if (!filtroMin.isEmpty()) { %>Desde $<%= filtroMin %>
-              <% } else { %>Hasta $<%= filtroMax %><% } %>
-              <a href="<%= ctx %>/producto?accion=listar&buscar=<%= filtroBuscar %>&categoria=<%= filtroCat %>&estado=<%= filtroEstado %>&orden=<%= filtroOrden %>">x</a>
-            </span>
-          <% } %>
-          <% if (!filtroEstado.isEmpty()) { %>
-            <span class="filtro-tag"><%= filtroEstado %>
-              <a href="<%= ctx %>/producto?accion=listar&buscar=<%= filtroBuscar %>&categoria=<%= filtroCat %>&min=<%= filtroMin %>&max=<%= filtroMax %>&orden=<%= filtroOrden %>">x</a>
+          <% if (!fMin.isEmpty() || !fMax.isEmpty()) {
+               String textoPrecio = !fMin.isEmpty() && !fMax.isEmpty() ? "$" + fMin + " - $" + fMax
+                                  : !fMin.isEmpty() ? "Desde $" + fMin : "Hasta $" + fMax;
+          %>
+            <span class="filtro-tag"><%= Html.esc(textoPrecio) %>
+              <a href="<%= Html.esc(urlSin(ctx, filtros, "min", "max")) %>" title="Quitar filtro">x</a>
             </span>
           <% } %>
         </div>
@@ -453,20 +294,17 @@
 
       <div class="catalogo-divider"></div>
 
-      <!-- Grid o estado vacio -->
       <% if (productos == null || productos.isEmpty()) { %>
         <% if (hayFiltro) { %>
           <div class="empty-state">
-            <div class="icon">[ ]</div>
             <h3>Sin resultados</h3>
-            <p>No encontramos productos con esos criterios. Intenta ajustar los filtros.</p>
+            <p>No encontramos productos con esos criterios. Prueba quitando algún filtro.</p>
             <a href="<%= ctx %>/producto?accion=listar" class="btn btn-primary">Ver todos los productos</a>
           </div>
         <% } else { %>
           <div class="empty-state">
-            <div class="icon">[ ]</div>
-            <h3>El catalogo esta vacio</h3>
-            <p>Aun no hay productos publicados.</p>
+            <h3>El catálogo está vacío</h3>
+            <p>Aún no hay productos publicados.</p>
             <% if ("admin".equals(rol) || "vendedor".equals(rol)) { %>
               <a href="<%= ctx %>/producto?accion=nuevo" class="btn btn-primary">Publicar producto</a>
             <% } %>
@@ -474,32 +312,40 @@
         <% } %>
       <% } else { %>
         <div class="product-grid">
-          <% for (Producto p : productos) { %>
+          <% for (Producto p : productos) {
+               String detalleUrl = ctx + "/producto?accion=detalle&id=" + p.getIdProducto();
+               String imgUrl     = p.getImagenUrl() != null ? p.getImagenUrl() : "";
+               String inicial    = (p.getCategoria() != null && !p.getCategoria().isEmpty())
+                                   ? p.getCategoria().substring(0, 1) : "L";
+          %>
           <div class="product-card">
-            <div class="card-img">
-              <% String imgUrl__ = p.getImagenUrl() != null && !p.getImagenUrl().isEmpty() ? p.getImagenUrl() : ""; %>
-              <% if (!imgUrl__.isEmpty()) { %>
-                <img class="card-img-real" src="<%= imgUrl__ %>" alt="<%= p.getTitulo() %>"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
-                <div class="card-img-placeholder" style="display:none;font-size:2rem;opacity:.35;font-family:var(--font-display);color:var(--terra);">
-                  <%= p.getCategoria() != null && !p.getCategoria().isEmpty() ? p.getCategoria().substring(0,1) : "P" %>
+            <a class="card-link" href="<%= detalleUrl %>">
+              <div class="card-img">
+                <% if (!imgUrl.isEmpty()) { %>
+                  <img class="card-img-real" src="<%= Html.esc(imgUrl) %>" alt="<%= Html.esc(p.getTitulo()) %>"
+                       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                  <div class="card-img-placeholder" style="display:none;"><%= Html.esc(inicial) %></div>
+                <% } else { %>
+                  <div class="card-img-placeholder"><%= Html.esc(inicial) %></div>
+                <% } %>
+                <div class="card-badges">
+                  <span class="badge badge-<%= Html.esc(p.getEstadoProducto()) %>"><%= Html.esc(p.getEstadoProducto()) %></span>
                 </div>
-              <% } else { %>
-                <div class="card-img-placeholder" style="font-size:2rem;opacity:.35;font-family:var(--font-display);color:var(--terra);">
-                  <%= p.getCategoria() != null && !p.getCategoria().isEmpty() ? p.getCategoria().substring(0,1) : "P" %>
-                </div>
-              <% } %>
-              <div class="card-badges">
-                <span class="badge badge-<%= p.getEstadoProducto() %>"><%= p.getEstadoProducto() %></span>
               </div>
-            </div>
-            <div class="card-body">
-              <p class="card-cat"><%= p.getCategoria() %></p>
-              <h3 class="card-title"><%= p.getTitulo() %></h3>
-              <p class="card-price">$ <%= String.format("%,.0f", p.getPrecio()) %> COP</p>
-              <p class="card-stock <%= p.getStock() == 0 ? "stock-cero" : "" %>">
-                <%= p.getStock() == 0 ? "Sin stock" : p.getStock() + " disponibles" %>
-              </p>
+              <div class="card-body">
+                <p class="card-cat"><%= Html.esc(p.getCategoria()) %></p>
+                <h3 class="card-title"><%= Html.esc(p.getTitulo()) %></h3>
+                <p class="card-price">$ <%= String.format("%,.0f", p.getPrecio()) %> COP</p>
+                <% if (p.getStock() == 0) { %>
+                  <p class="card-stock stock-cero">Sin stock</p>
+                <% } else if (p.getStock() == 1) { %>
+                  <p class="card-unica">Pieza única</p>
+                <% } else { %>
+                  <p class="card-stock"><%= p.getStock() %> disponibles</p>
+                <% } %>
+              </div>
+            </a>
+            <div class="card-body" style="padding-top:0;">
               <div class="card-actions">
                 <% if ("comprador".equals(rol) && p.getStock() > 0) { %>
                   <form method="post" action="<%= ctx %>/carrito" style="flex:1;display:flex;">
@@ -511,10 +357,10 @@
                 <% } %>
                 <% if ("admin".equals(rol) || ("vendedor".equals(rol) && idVendedorUsuario == p.getIdVendedor())) { %>
                   <a href="<%= ctx %>/producto?accion=editar&id=<%= p.getIdProducto() %>"
-                     class="btn btn-sm btn-edit">✏️ Editar</a>
+                     class="btn btn-sm btn-edit">Editar</a>
                   <a href="<%= ctx %>/producto?accion=eliminar&id=<%= p.getIdProducto() %>"
                      class="btn btn-sm btn-delete"
-                     onclick="return confirm('¿Eliminar este producto?')">🗑️</a>
+                     onclick="return confirm('¿Eliminar este producto?')">Eliminar</a>
                 <% } %>
               </div>
             </div>
@@ -525,19 +371,34 @@
     </div>
   </section>
 
-</div><!-- /catalogo-wrapper -->
+</div>
 
 <script>
-function updateCount() {
-  const buscar    = document.querySelector('[name="buscar"]').value.trim();
-  const categoria = document.querySelector('[name="categoria"]:checked')?.value || '';
-  const min       = document.querySelector('[name="min"]').value.trim();
-  const max       = document.querySelector('[name="max"]').value.trim();
-  const estado    = document.querySelector('[name="estado"]').value;
-  const n = [buscar, categoria, min, max, estado].filter(v => v !== '').length;
-  const badge = document.querySelector('.filtros-count');
-  if (badge) { badge.textContent = n; badge.classList.toggle('visible', n > 0); }
-}
+// Actualiza el contador de filtros mientras se escribe, sin recargar la página.
+(function () {
+  var form  = document.getElementById('filtrosForm');
+  var badge = document.querySelector('.filtros-count');
+  if (!form || !badge) return;
+  var nombres = ['buscar', 'categoria', 'marca', 'talla', 'color', 'min', 'max', 'estado'];
+  function contar() {
+    var n = 0;
+    nombres.forEach(function (nombre) {
+      var campos = form.querySelectorAll('[name="' + nombre + '"]');
+      if (!campos.length) return;
+      var valor = '';
+      if (campos[0].type === 'radio') {
+        var marcado = form.querySelector('[name="' + nombre + '"]:checked');
+        valor = marcado ? marcado.value : '';
+      } else {
+        valor = campos[0].value;
+      }
+      if (valor && String(valor).trim() !== '') n++;
+    });
+    badge.textContent = n;
+    badge.classList.toggle('visible', n > 0);
+  }
+  form.addEventListener('input', contar);
+})();
 </script>
 </body>
 </html>

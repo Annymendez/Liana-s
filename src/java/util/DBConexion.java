@@ -20,7 +20,7 @@ public class DBConexion {
                                          + "?useSSL=false&serverTimezone=America/Bogota"
                                          + "&allowPublicKeyRetrieval=true";
     private static final String USUARIO  = "root";
-    private static final String PASSWORD = "root";
+    private static final String PASSWORD = "";
     private static final String DRIVER   = "com.mysql.cj.jdbc.Driver";
 
     /**

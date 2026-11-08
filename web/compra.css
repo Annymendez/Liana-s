@@ -1,0 +1,108 @@
+/* Liana's — estilos del proceso de compra: carrito, dirección y pago.
+   Usa las variables de estilo.css. Cada página enlaza estilo.css primero y este archivo después. */
+
+/* ── Pasos (carrito → dirección → pago) ── */
+.wizard { display: flex; align-items: center; margin: 40px 0 48px; }
+.wizard-step { display: flex; align-items: center; gap: 12px; flex: 1; position: relative; }
+.wizard-step:not(:last-child)::after {
+  content: ''; position: absolute; left: 52px; top: 20px;
+  width: calc(100% - 52px); height: 2px; background: var(--arena); z-index: 0;
+}
+.wizard-step.hecho:not(:last-child)::after { background: var(--dorado); }
+.step-circle {
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .85rem; flex-shrink: 0; position: relative; z-index: 1;
+  border: 2px solid var(--arena); background: var(--blanco); color: var(--gris-med);
+  transition: all .3s;
+}
+.step-circle.activo { background: var(--rojo); color: var(--blanco); border-color: var(--rojo); }
+.step-circle.listo  { background: var(--dorado); color: var(--negro); border-color: var(--dorado); }
+.step-info { display: flex; flex-direction: column; }
+.step-num  { font-size: .6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gris-med); }
+.step-name { font-size: .84rem; font-weight: 600; color: var(--negro); }
+.step-name.inactivo { color: var(--gris-med); font-weight: 400; }
+
+/* ── Estructura: lista a la izquierda, resumen a la derecha ── */
+.carrito-layout {
+  display: grid; grid-template-columns: 1fr 340px; gap: 36px;
+  align-items: start; padding-bottom: 80px;
+}
+@media (max-width: 860px) {
+  .carrito-layout { grid-template-columns: 1fr; }
+  .resumen-card { position: static; }
+}
+
+/* ── Tarjeta con los productos ── */
+.carrito-card { background: var(--blanco); border: 1px solid var(--arena); overflow: hidden; }
+.carrito-head {
+  background: var(--negro); color: var(--blanco); padding: 16px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.carrito-head h3 {
+  font-family: var(--font-body); font-size: .7rem; font-weight: 600;
+  letter-spacing: 2.5px; text-transform: uppercase; margin: 0;
+}
+.carrito-head a { font-size: .7rem; color: var(--dorado); text-decoration: none; letter-spacing: 1px; transition: color .2s; }
+.carrito-head a:hover { color: var(--blanco); }
+
+.carrito-item {
+  display: grid; grid-template-columns: 56px 1fr auto auto;
+  gap: 18px; align-items: center; padding: 20px 24px;
+  border-bottom: 1px solid var(--arena);
+}
+.carrito-item:last-child { border-bottom: none; }
+@media (max-width: 640px) {
+  .carrito-item { grid-template-columns: 48px 1fr; }
+  .carrito-item .item-cantidad, .carrito-item .item-acciones { grid-column: 2; }
+  .carrito-item .item-acciones { flex-direction: row; align-items: center; justify-content: space-between; }
+}
+
+.item-inicial {
+  width: 56px; height: 56px; background: var(--arena); color: var(--rojo);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-size: 1.4rem; font-weight: 600;
+}
+.item-cat  { font-size: .62rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dorado2); font-weight: 700; margin-bottom: 2px; }
+.item-name { font-family: var(--font-display); font-size: 1rem; color: var(--negro); margin-bottom: 2px; }
+.item-name a { color: inherit; text-decoration: none; }
+.item-name a:hover { color: var(--rojo); }
+.item-price { font-size: .8rem; color: var(--gris-med); }
+.item-unica { font-size: .66rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dorado2); font-weight: 700; }
+
+/* ── Control de cantidad ── */
+.qty-control { display: flex; align-items: center; border: 1.5px solid var(--arena); overflow: hidden; }
+.qty-btn {
+  width: 32px; height: 32px; background: var(--blanco); border: none; cursor: pointer;
+  font-size: 1rem; color: var(--rojo); display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.qty-btn:hover { background: var(--arena); }
+.qty-input {
+  width: 42px; height: 32px; text-align: center; border: none;
+  font-family: var(--font-body); font-size: .88rem; font-weight: 600;
+  color: var(--negro); background: var(--blanco); outline: none;
+}
+
+.item-acciones { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.item-subtotal { font-weight: 700; color: var(--rojo); font-size: 1rem; }
+.item-del { color: var(--gris-med); text-decoration: none; font-size: .72rem; letter-spacing: .5px; transition: color .2s; }
+.item-del:hover { color: var(--rojo); }
+
+/* ── Resumen de compra ── */
+.resumen-card { background: var(--blanco); border: 1px solid var(--arena); overflow: hidden; position: sticky; top: 88px; }
+.resumen-head {
+  background: var(--rojo); color: var(--blanco); padding: 16px 22px;
+  font-family: var(--font-body); font-size: .7rem; font-weight: 600;
+  letter-spacing: 2.5px; text-transform: uppercase;
+}
+.resumen-body { padding: 22px; }
+.resumen-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; font-size: .86rem; color: var(--gris-med); }
+.resumen-row strong { color: var(--negro); white-space: nowrap; }
+.resumen-div { height: 1px; background: var(--arena); margin: 14px 0; }
+.resumen-total { display: flex; justify-content: space-between; align-items: baseline; }
+.resumen-total .lbl { font-size: .7rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gris-med); font-weight: 600; }
+.resumen-total .amt { font-family: var(--font-display); font-size: 1.6rem; color: var(--rojo); font-weight: 600; }
+.resumen-moneda { font-size: .68rem; color: var(--gris-med); text-align: right; margin-top: 4px; }
+.resumen-botones { margin-top: 22px; display: flex; flex-direction: column; gap: 9px; }
+.resumen-botones .btn { justify-content: center; }
+.resumen-notas { font-size: .7rem; color: var(--gris-med); line-height: 1.9; margin-top: 16px; text-align: center; }
