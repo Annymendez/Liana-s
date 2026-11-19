@@ -109,10 +109,14 @@ public class CalificacionServlet extends HttpServlet {
                 return;
             }
 
-            // Buscar el id_persona del vendedor a partir del producto de la orden
-            // Usamos id_vendedor del primer producto de la orden
-            // Como la orden guarda id_comprador, buscamos el vendedor por la orden
+            // Vendedor real de la orden (orden → producto → vendedor)
             int idPersonaVendedor = obtenerPersonaVendedorDeLaOrden(idOrden);
+            if (idPersonaVendedor <= 0) {
+                req.setAttribute("error", "No se encontró el vendedor de la orden #" + idOrden
+                        + ". Revisa que la orden tenga productos asociados.");
+                req.getRequestDispatcher("/error.jsp").forward(req, resp);
+                return;
+            }
 
             Calificacion c = new Calificacion();
             c.setIdOrden     (idOrden);
@@ -131,36 +135,93 @@ public class CalificacionServlet extends HttpServlet {
         }
     }
 
-    // Obtiene el id_persona del vendedor asociado a la orden
+    // ─────────────────────────────────────────────────────────────
+    // Obtiene el id_persona del vendedor REAL de la orden.
+    // Antes devolvía el primer vendedor con cualquier producto activo,
+    // por eso las calificaciones le llegaban al vendedor equivocado.
+    // Ahora busca el vínculo orden → producto → vendedor según
+    // cómo esté armada la BD:
+    //   1) orden.id_vendedor
+    //   2) orden.id_producto
+    //   3) una tabla de detalle con columnas id_orden + id_producto
+    // Si no encuentra nada, devuelve -1.
+    // ─────────────────────────────────────────────────────────────
     private int obtenerPersonaVendedorDeLaOrden(int idOrden) throws SQLException {
-        // Buscar el primer producto de la orden y obtener su vendedor
-        String sql = "SELECT v.id_persona FROM orden o "
-                   + "JOIN producto p ON p.visibilidad != 'eliminado' "
-                   + "JOIN vendedor v ON p.id_vendedor = v.id_vendedor "
-                   + "WHERE o.id_orden = ? LIMIT 1";
-        // Fallback: buscar de otra forma si no hay productos directos
-        // Como nuestra BD no tiene tabla orden_detalle, buscamos el vendedor del primer producto activo
-        // que tenga la misma categoría que justifique la orden.
-        // En su lugar, buscamos el vendedor del producto más reciente del comprador de esa orden
-        util.DBConexion conn2 = null;
+        java.sql.Connection conn = null;
         try {
-            java.sql.Connection conn = util.DBConexion.getConexion();
-            // Obtener id_comprador de la orden
-            java.sql.PreparedStatement ps1 = conn.prepareStatement(
-                "SELECT id_comprador FROM orden WHERE id_orden = ?");
-            ps1.setInt(1, idOrden);
-            java.sql.ResultSet rs1 = ps1.executeQuery();
-            if (!rs1.next()) return 1;
+            conn = util.DBConexion.getConexion();
 
-            // Buscar el primer vendedor que tenga productos activos (simplificado)
-            java.sql.PreparedStatement ps2 = conn.prepareStatement(
-                "SELECT v.id_persona FROM vendedor v "
-              + "JOIN producto p ON p.id_vendedor = v.id_vendedor "
-              + "WHERE p.visibilidad = 'activo' LIMIT 1");
-            java.sql.ResultSet rs2 = ps2.executeQuery();
-            if (rs2.next()) return rs2.getInt(1);
-            util.DBConexion.cerrar(conn);
-        } catch (Exception ignored) {}
-        return 1; // fallback
+            // 1) La orden guarda directamente el vendedor
+            if (columnaExiste(conn, "orden", "id_vendedor")) {
+                int id = consultarId(conn,
+                    "SELECT v.id_persona FROM orden o "
+                  + "JOIN vendedor v ON v.id_vendedor = o.id_vendedor "
+                  + "WHERE o.id_orden = ?", idOrden);
+                if (id > 0) return id;
+            }
+
+            // 2) La orden guarda el producto
+            if (columnaExiste(conn, "orden", "id_producto")) {
+                int id = consultarId(conn,
+                    "SELECT v.id_persona FROM orden o "
+                  + "JOIN producto p ON p.id_producto = o.id_producto "
+                  + "JOIN vendedor v ON v.id_vendedor = p.id_vendedor "
+                  + "WHERE o.id_orden = ?", idOrden);
+                if (id > 0) return id;
+            }
+
+            // 3) Tabla de detalle (orden_detalle, detalle_orden, orden_producto…)
+            String tablaDetalle = buscarTablaDetalle(conn);
+            if (tablaDetalle != null) {
+                int id = consultarId(conn,
+                    "SELECT v.id_persona FROM `" + tablaDetalle + "` d "
+                  + "JOIN producto p ON p.id_producto = d.id_producto "
+                  + "JOIN vendedor v ON v.id_vendedor = p.id_vendedor "
+                  + "WHERE d.id_orden = ? LIMIT 1", idOrden);
+                if (id > 0) return id;
+            }
+
+            return -1;
+        } finally {
+            if (conn != null) {
+                try { util.DBConexion.cerrar(conn); } catch (Exception ignored) {}
+            }
+        }
+    }
+
+    private boolean columnaExiste(java.sql.Connection conn, String tabla, String columna) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM information_schema.COLUMNS "
+                   + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?";
+        try (java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tabla);
+            ps.setString(2, columna);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    // Busca una tabla (distinta de orden) que tenga id_orden e id_producto
+    private String buscarTablaDetalle(java.sql.Connection conn) throws SQLException {
+        String sql = "SELECT TABLE_NAME FROM information_schema.COLUMNS "
+                   + "WHERE TABLE_SCHEMA = DATABASE() "
+                   + "AND COLUMN_NAME IN ('id_orden','id_producto') "
+                   + "AND TABLE_NAME <> 'orden' "
+                   + "GROUP BY TABLE_NAME "
+                   + "HAVING COUNT(DISTINCT COLUMN_NAME) = 2 "
+                   + "LIMIT 1";
+        try (java.sql.PreparedStatement ps = conn.prepareStatement(sql);
+             java.sql.ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getString(1) : null;
+        }
+    }
+
+    private int consultarId(java.sql.Connection conn, String sql, int idOrden) throws SQLException {
+        try (java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idOrden);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : -1;
+            }
+        }
     }
 }
