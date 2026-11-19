@@ -65,7 +65,9 @@ public class ProductoServlet extends HttpServlet {
                                     ? dao.buscarFiltradoPorVendedor(v.getIdVendedor(), texto, marca, categoria, estado, orden, min, max)
                                     : dao.listarPorVendedor(v.getIdVendedor());
                         }
-                        default -> { hayFiltro = false; yield dao.listarTodos(); }
+                        default -> hayFiltro
+                            ? dao.buscarFiltradoAdmin(texto, marca, categoria, estado, orden, min, max)
+                            : dao.listarTodos();
                     };
 
                     req.setAttribute("productos",    productos);

@@ -55,13 +55,19 @@ public class ProductoDAO {
         return buscarConFiltros(idVendedor, texto, marca, categoria, estado, orden, min, max);
     }
 
+    // Admin: filtra sobre TODOS los productos (activos, inactivos, sin stock), menos los eliminados
+    public List<Producto> buscarFiltradoAdmin(String texto, String marca, String categoria, String estado, String orden, Double min, Double max) {
+        return buscarConFiltros(0, texto, marca, categoria, estado, orden, min, max);
+    }
+
+    // idVendedor > 0 → solo ese vendedor · 0 → admin (todo) · -1 → comprador (solo activos con stock)
     private List<Producto> buscarConFiltros(int idVendedor, String texto, String marca, String categoria, String estado, String orden, Double min, Double max) {
         List<Producto> lista = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT p.*,pe.nombre AS nombre_vendedor FROM producto p JOIN vendedor v ON p.id_vendedor=v.id_vendedor JOIN persona pe ON v.id_persona=pe.id_persona WHERE p.visibilidad!='eliminado'");
 
         if (idVendedor > 0)                            sql.append(" AND p.id_vendedor=?");
-        else                                           sql.append(" AND p.visibilidad='activo' AND p.stock>0");
+        else if (idVendedor < 0)                       sql.append(" AND p.visibilidad='activo' AND p.stock>0");
         if (texto     != null && !texto.isEmpty())     sql.append(" AND (p.titulo LIKE ? OR p.descripcion LIKE ?)");
         if (marca     != null && !marca.isEmpty())     sql.append(" AND p.marca=?");
         if (categoria != null && !categoria.isEmpty()) sql.append(" AND p.categoria=?");
