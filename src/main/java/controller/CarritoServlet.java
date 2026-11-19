@@ -121,7 +121,12 @@ public class CarritoServlet extends HttpServlet {
                         carrito.add(new CarritoItem(prod, Math.min(cantidad, prod.getStock())));
                     }
                     session.setAttribute("carrito", carrito);
-                    resp.sendRedirect(req.getContextPath() + "/producto?accion=listar&msg=agregado");
+                    // Desde "Comprar ahora" (detalle) se manda ir=carrito → va directo al carrito
+                    if ("carrito".equals(req.getParameter("ir"))) {
+                        resp.sendRedirect(req.getContextPath() + "/carrito?accion=ver&msg=agregado");
+                    } else {
+                        resp.sendRedirect(req.getContextPath() + "/producto?accion=listar&msg=agregado");
+                    }
                 }
 
                 case "actualizar" -> {
@@ -204,6 +209,9 @@ public class CarritoServlet extends HttpServlet {
                     int idOrden = ordenDAO.crear(o);
                     if (idOrden > 0) {
                         for (CarritoItem item : carrito) {
+                            // Guardar qué productos tiene la orden (para saber el vendedor)
+                            ordenDAO.agregarDetalle(idOrden, item.getIdProducto(),
+                                                    item.getCantidad(), item.getPrecioUnitario());
                             productoDAO.descontarStock(item.getIdProducto(), item.getCantidad());
                         }
                         ordenDAO.cambiarEstado(idOrden, "pagado");

@@ -35,6 +35,25 @@ public class OrdenDAO {
         return -1;
     }
 
+    /**
+     * Guarda qué producto (y cuánto) se compró en una orden.
+     * Con esto se sabe a qué vendedor pertenece cada orden
+     * (lo necesita la calificación). Tabla: orden_detalle.
+     */
+    public void agregarDetalle(int idOrden, int idProducto, int cantidad, double precioUnitario) throws SQLException {
+        String sql = "INSERT INTO orden_detalle (id_orden, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)";
+        Connection conn = null;
+        try {
+            conn = DBConexion.getConexion();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt   (1, idOrden);
+            ps.setInt   (2, idProducto);
+            ps.setInt   (3, cantidad);
+            ps.setDouble(4, precioUnitario);
+            ps.executeUpdate();
+        } finally { DBConexion.cerrar(conn); }
+    }
+
     public Orden buscarPorId(int id) throws SQLException {
         String sql = "SELECT o.*, p.nombre AS nombre_comprador "
                    + "FROM orden o JOIN persona p ON o.id_comprador = p.id_persona "

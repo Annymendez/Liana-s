@@ -148,8 +148,14 @@
       <div class="acciones-compra">
         <% if ("comprador".equals(rol)) { %>
           <% if (p.getStock() > 0) { %>
-            <a href="<%= ctx %>/orden?accion=nueva&idProducto=<%= p.getIdProducto() %>"
-               class="btn btn-primary" style="justify-content:center;padding:16px;">🛒 Comprar ahora</a>
+            <form method="post" action="<%= ctx %>/carrito" style="margin:0;">
+              <input type="hidden" name="accion"     value="agregar">
+              <input type="hidden" name="idProducto" value="<%= p.getIdProducto() %>">
+              <input type="hidden" name="cantidad"   value="1">
+              <input type="hidden" name="ir"         value="carrito">
+              <button type="submit" class="btn btn-primary"
+                      style="justify-content:center;padding:16px;width:100%;">🛒 Comprar ahora</button>
+            </form>
           <% } else { %>
             <div class="sin-stock">❌ Producto sin stock disponible</div>
           <% } %>

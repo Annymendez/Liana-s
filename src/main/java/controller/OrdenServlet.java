@@ -138,6 +138,7 @@ public class OrdenServlet extends HttpServlet {
             int idOrden = ordenDAO.crear(o);
 
             if (idOrden > 0) {
+                ordenDAO.agregarDetalle(idOrden, idProducto, cantidad, prod.getPrecio());
                 productoDAO.descontarStock(idProducto, cantidad); // RF-AN-08
                 ordenDAO.cambiarEstado(idOrden, "pagado");
                 resp.sendRedirect(req.getContextPath() + "/orden?accion=listar&msg=creado");

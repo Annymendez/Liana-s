@@ -170,6 +170,7 @@ public class ProductoDAO {
         p.setFechaCreacion(rs.getTimestamp("fecha_creacion"));
         try { p.setNombreVendedor(rs.getString("nombre_vendedor")); } catch (Exception ignored) {}
         try { p.setPoliticaDevolucion(rs.getString("politica_devolucion")); } catch (Exception ignored) {}
+        try { p.setCategoria(rs.getString("categoria")); } catch (Exception ignored) {}
         return p;
     }
 }
