@@ -1,0 +1,126 @@
+/* formulario.css — estilo editorial inspirado en Rewind Vintage */
+.form-page {
+  background: #faf9f7;
+  min-height: 100vh;
+  padding: 60px 20px;
+}
+
+.form-container {
+  max-width: 680px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid #e0ddd8;
+  padding: 56px 56px 48px;
+}
+
+.form-header {
+  margin-bottom: 40px;
+  border-bottom: 1px solid #e0ddd8;
+  padding-bottom: 24px;
+}
+
+.form-header h1 {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 2rem;
+  font-weight: 400;
+  color: #1a1a1a;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.5px;
+}
+
+.form-header p {
+  font-size: .82rem;
+  color: #888;
+  margin: 0;
+  letter-spacing: .04em;
+}
+
+.form-group {
+  margin-bottom: 28px;
+}
+
+.form-group label {
+  display: block;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #444;
+  margin-bottom: 8px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="url"],
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  border: 1px solid #c8c5bf;
+  border-radius: 0;
+  padding: 12px 14px;
+  font-size: .92rem;
+  color: #1a1a1a;
+  background: #fff;
+  outline: none;
+  transition: border-color .2s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: #1a1a1a;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 1px solid #e0ddd8;
+}
+
+.btn-primary {
+  flex: 1;
+  padding: 14px;
+  background: #7a1a1a;
+  color: #fff;
+  border: none;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.btn-primary:hover { background: #5a1010; }
+
+.btn-secondary {
+  padding: 14px 24px;
+  background: transparent;
+  color: #1a1a1a;
+  border: 1px solid #1a1a1a;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.btn-secondary:hover { background: #f5f5f5; }
