@@ -153,7 +153,7 @@
         <a href="<%= __ctx %>/orden?accion=listar"     class="nav-rw-link">Pedidos</a>
         <a href="<%= __ctx %>/admin?accion=vendedores" class="nav-rw-link">Vendedores</a>
         <a href="<%= __ctx %>/admin?accion=usuarios"   class="nav-rw-link">Usuarios</a>
-        <a href="<%= __ctx %>/admin?accion=auditoria"  class="nav-rw-link">Auditoría</a>
+<%-- <a href="<%= __ctx %>/admin?accion=auditoria"  class="nav-rw-link">Auditoría</a> --%>
       <% } %>
     </nav>
 
@@ -190,7 +190,7 @@
             <a href="<%= __ctx %>/orden?accion=listar">Pedidos</a>
             <a href="<%= __ctx %>/admin?accion=vendedores">Validar vendedores</a>
             <a href="<%= __ctx %>/admin?accion=usuarios">Gestión usuarios</a>
-            <a href="<%= __ctx %>/admin?accion=auditoria">Auditoría</a>
+<%-- <a href="<%= __ctx %>/admin?accion=auditoria">Auditoría</a> --%>
           <% } %>
 
           <div class="nav-rw-dropdown-sep"></div>
