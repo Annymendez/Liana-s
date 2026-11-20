@@ -1,0 +1,54 @@
+-- Actualiza imagen_url de los productos que no tenían imagen (Liana's)
+-- Solo modifica filas cuya imagen está vacía; no pisa imágenes ya cargadas.
+SET NAMES utf8mb4;
+START TRANSACTION;
+
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStVNHw9Ajs79MRhE5LWu0QsX4ZQOzR0IpVAO4t12VNpwm7iDux9wEVwFM&s=10' WHERE `id_producto` = 4 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhpoiVCqGswqux_UKuYjqAbOShWUGxN60jQ2HtzodKPwH_0koFC0KWRos&s=10' WHERE `id_producto` = 5 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://cdn-images.farfetch-contents.com/24/78/54/42/24785442_55002240_1000.jpg' WHERE `id_producto` = 7 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.ebayimg.com/images/g/MY4AAeSwf6hq41jh/s-l1200.webp' WHERE `id_producto` = 8 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://cdn-images.farfetch-contents.com/28/45/21/94/28452194_61044793_600.jpg' WHERE `id_producto` = 13 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.ebayimg.com/images/g/VekAAeSwx-Bp8MVB/s-l1200.webp' WHERE `id_producto` = 21 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.etsystatic.com/10665528/r/il/a797e0/6005937275/il_fullxfull.6005937275_jkma.jpg' WHERE `id_producto` = 25 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://image.made-in-china.com/202f0j00tjcMsQBlZIbV/Elegant-Blue-Evening-Dress-with-Sequined-Tassels-for-Performances.webp' WHERE `id_producto` = 26 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.ebayimg.com/images/g/Mt8AAeSwIWdqrD~K/s-l1200.webp' WHERE `id_producto` = 27 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.ebayimg.com/images/g/LG8AAeSwFrlqvGN-/s-l1200.webp' WHERE `id_producto` = 28 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRr6vNINZUC9Uw_wTpDpzlPdKxkun0n8faYlJGNdLTl_A&s' WHERE `id_producto` = 29 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.ebayimg.com/images/g/EaYAAeSwj79o6cYb/s-l1200.webp' WHERE `id_producto` = 30 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://img.ltwebstatic.com/v4/j/spmp/2026/06/10/86/1781078893069c997a8f4761893742bde5c709bcb0_thumbnail_750x999.jpg' WHERE `id_producto` = 31 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.etsystatic.com/5620966/c/1536/1536/0/266/il/c21227/2948551219/il_300x300.2948551219_6ay5.jpg' WHERE `id_producto` = 32 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTisqYD2EVEXbfYxKkAJUnn4yZUcG_imV6y8MoUakPOxnM5NoQQr24h3xg&s=10' WHERE `id_producto` = 33 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.ebayimg.com/images/g/xbgAAeSwNm9qciM7/s-l1200.webp' WHERE `id_producto` = 34 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://media.mango.com/is/image/punto/37067942-56-900?wid=2048' WHERE `id_producto` = 35 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://vintage-vogue.shop/wp-content/uploads/2026/08/Schwarzer-Damen-Lederrock-Bleistiftrock-Kunstlederrock-Ada-Retro-Rockabilly-Damenrock-aus-Kunstleder-50er-Jahre-Vintage-Stil-von-Banned-Retro-03-1156x1593-b81bj-wm.png' WHERE `id_producto` = 36 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.ebayimg.com/images/g/8X8AAOSwxNBmtMCr/s-l1200.jpg' WHERE `id_producto` = 37 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.ebayimg.com/images/g/7iMAAeSwH~1q9dQL/s-l1200.webp' WHERE `id_producto` = 38 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIwSs0H-fhAFQLC0zasY8n630Ear2v-lDSDftpEr16--gXgs6d5PoshXL3&s=10' WHERE `id_producto` = 39 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSOkXOk7-6bu1bQ_bT7zINMydxmLzCJIX0D_LBIIzS47SFtSl_Z66giedo&s=10' WHERE `id_producto` = 40 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.ebayimg.com/images/g/lt0AAOSwTeZmfHsP/s-l1200.jpg' WHERE `id_producto` = 41 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://lsco.vtexassets.com/arquivos/ids/379096/72334-0134_1.jpg?v=639082347644300000' WHERE `id_producto` = 42 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://calvincolombia.vtexassets.com/arquivos/ids/906041/40kc735-001-1.jpg?v=638947760700370000' WHERE `id_producto` = 43 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://tommycolombia.vtexassets.com/arquivos/ids/1548389/dm0dm22739-c1g-1.jpg?v=639184404933400000' WHERE `id_producto` = 44 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOSHqaL7YWUNnvEw5uvSOJ329r8wHeS4bZ_owjU6j9aAIrDegvmGAvPY7H&s=10' WHERE `id_producto` = 45 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.etsystatic.com/57519944/r/il/1d9db9/7638690913/il_1080xN.7638690913_tjii.jpg' WHERE `id_producto` = 46 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://m.media-amazon.com/images/I/71Z1dvdop2L._AC_UY1000_.jpg' WHERE `id_producto` = 47 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco,c_scale,w_300,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/3f4633fb-5d2f-4928-b67d-5298fc23118e/NIKE+CORTEZ+TXT.png' WHERE `id_producto` = 48 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://assets.adidas.com/images/w_500,f_auto,q_auto/3f63d7699f2542748dd0131d0470641a_9366/Tenis_Samba_OG_Negro_JQ3083_01_00_standard.jpg' WHERE `id_producto` = 49 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://www.converse.com/dw/image/v2/BJJF_PRD/on/demandware.static/-/Sites-cnv-master-catalog-we/default/dwf1588ea7/images/e_08/M9160C_E_08X1.jpg?sw=406&strip=false' WHERE `id_producto` = 50 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRF68BjKiY4QvLUtleEpwQjkLjLsaw-X01Et6z0StYzIGlXnQpBqgnLTda9&s=10' WHERE `id_producto` = 51 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://tenisi.co/cdn/shop/files/timberland-premium-6-inch-wheat-frontal.png?v=1762983974&width=900' WHERE `id_producto` = 52 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://media.istockphoto.com/id/92106388/es/foto/botas-de-vaquero.jpg?s=612x612&w=0&k=20&c=UkgURYld0Udh_j6F61b68275tiCFg7owtrNrPm_Y6B0=' WHERE `id_producto` = 53 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFswq6zkrCiNef7lr3-BoryJ_3u3w4v6JVml3m1Q1WCMGHqOOmkmsotVA&s=10' WHERE `id_producto` = 54 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://http2.mlstatic.com/D_NQ_NP_776371-MLA79436282086_102024-O.webp' WHERE `id_producto` = 55 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://http2.mlstatic.com/D_NQ_NP_676139-MCO74398772539_022024-O.webp' WHERE `id_producto` = 56 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ5uXSLSsqPkmaIR0uSQEQgQcX0-VbxIqHEos5jpqLWRa6h4dwOuqNuxjgD&s=10' WHERE `id_producto` = 57 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTc34RCct6SbZ91TTPmRoGC9vDV8KYEZf1CMYaOV3CLMePdLlayFB_cgu8&s=10' WHERE `id_producto` = 58 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.ebayimg.com/images/g/ZcsAAeSwf-hqMmpP/s-l1200.webp' WHERE `id_producto` = 59 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://cdn.faire.com/fastly/5af1d71bbf3e50984a469e8b2157ec5f0905f22845be1c9be996e0bb2741909e.jpeg?bg-color=FFFFFF&canvas=720:720&dpr=1&fit=bounds&format=jpg&height=720&width=720' WHERE `id_producto` = 60 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.ebayimg.com/images/g/seAAAeSw-JFqs~X9/s-l1200.webp' WHERE `id_producto` = 76 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTl0rZ1zbrppybkROKarbeBEP4GPNYCYjOpwCu-oIDLzxkYceoSKB_OPTI&s=10' WHERE `id_producto` = 77 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://i.etsystatic.com/66043962/r/il/d92217/8167366347/il_fullxfull.8167366347_hbdp.jpg' WHERE `id_producto` = 78 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://www.theluxurycabinet.com/wp-content/uploads/2025/11/3X7A9368.jpg' WHERE `id_producto` = 79 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+UPDATE `producto` SET `imagen_url` = 'https://www.chanel.com/images/as///f_auto,q_auto:good,dpr_1.1/w_3200/-76268838.jpg' WHERE `id_producto` = 80 AND (`imagen_url` IS NULL OR TRIM(`imagen_url`) = '');
+
+COMMIT;
